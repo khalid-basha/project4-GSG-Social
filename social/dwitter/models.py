@@ -14,6 +14,7 @@ class Profile(models.Model):
     )
     def __str__(self):
         return self.user.username
+
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
     if created:
@@ -21,6 +22,7 @@ def create_profile(sender, instance, created, **kwargs):
         user_profile.save()
         user_profile.follows.add(instance.profile)
         user_profile.save()
+        
 class Dweet(models.Model):
     user = models.ForeignKey(User,related_name="dweets",
         on_delete=models.DO_NOTHING)

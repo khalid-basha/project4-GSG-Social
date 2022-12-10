@@ -1,7 +1,19 @@
 from django.shortcuts import render, redirect
-from .forms import DweetForm
+from .forms import DweetForm, CustomUserCreationForm
 from .models import Profile
-# Create your views here.
+from django.urls import reverse
+from django.contrib.auth import login
+
+
+def dashboard(request):
+    form = DweetForm(request.POST or None)
+    if request.method == "POST":
+        if form.is_valid():
+            dweet = form.save(commit=False)
+            dweet.user = request.user
+            dweet.save()
+            return redirect("dwitter:dashboard")
+    return render(request, "dwitter/dashboard.html", {"form": form})
 
 def redirect_view(request):
     response = redirect('/redirect-success/')
@@ -28,23 +40,15 @@ def profile(request, pk):
         current_user_profile.save()
     return render(request, "dwitter/profile.html", {"profile": profile})
 
-def dashboard(request):
-    if request.method =="POST":
-        form = DweetForm(request.POST)
+def register(request):
+    if request.method == "GET":
+        return render(
+            request, "dwitter/register.html",
+            {"form": CustomUserCreationForm}
+        )
+    elif request.method == "POST":
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            dweet = form.save( commit=False)
-            dweet.user = request.user
-            dweet.save()
-
-    form = DweetForm()
-    return render(request, "dwitter/dashboard.html", {"form": form})
-
-def dashboard(request):
-    form = DweetForm(request.POST or None)
-    if request.method == "POST":
-        if form.is_valid():
-            dweet = form.save(commit=False)
-            dweet.user = request.user
-            dweet.save()
-            return redirect("dwitter:dashboard")
-    return render(request, "dwitter/dashboard.html", {"form": form})
+            user = form.save()
+            login(request, user)
+            return render(request, "dwitter/dashboard.html")
